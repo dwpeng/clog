@@ -96,9 +96,24 @@ clog_get_level()
 #define __cb_get_time_section(buff)                                                                                    \
   do {                                                                                                                 \
     time_t now = time(NULL);                                                                                           \
-    struct tm* t = localtime(&now);                                                                                     \
-    strftime(buff, sizeof(buff), "%Y-%m-%d %H:%M:%S", t);                                                               \
+    struct tm* t = localtime(&now);                                                                                    \
+    strftime(buff, sizeof(buff), "%Y-%m-%d %H:%M:%S", t);                                                              \
   } while (0)
+
+static inline FILE*
+__pglog_print_file(int level, FILE* stream, const char* header)
+{
+  if (level < __clog_default_level)
+    return NULL;
+#ifndef CLOG_NTIME
+  char buff[30] = { 0 };
+  __cb_get_time_section(buff);
+  fprintf(stream, "[%s - %s]%s:", __levelStr(level), buff, header);
+#else
+  fprintf(stream, "[%s]%s:", __levelStr(level), header);
+#endif
+  return stream;
+}
 
 static inline FILE*
 __pglog_print(int level, FILE* stream, const char* header)
@@ -117,7 +132,7 @@ __pglog_print(int level, FILE* stream, const char* header)
 
 #define __log2file(level, fp, ...)                                                                                     \
   do {                                                                                                                 \
-    FILE* __fp = __pglog_print(level, fp, __header(__FILE__, CLOG_StR(__LINE__)));                                \
+    FILE* __fp = __pglog_print_file(level, fp, __header(__FILE__, CLOG_StR(__LINE__)));                                \
     if (__fp) {                                                                                                        \
       fprintf(__fp, __VA_ARGS__);                                                                                      \
       fflush(__fp);                                                                                                    \

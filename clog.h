@@ -1,37 +1,40 @@
 #ifndef __clog_h__
 #define __clog_h__
 
-#define cplatform_unknown 0
-#define cplatform_windows 1
-#define cplatform_linux 2
-#define cplatform_macos 3
+// 平台定义
+#define CPLATFORM_UNKNOWN 0
+#define CPLATFORM_WINDOWS 1
+#define CPLATFORM_LINUX 2
+#define CPLATFORM_MACOS 3
 
-#if defined(_WIN32) || defined(_WIN64) || defined(__WIN32__) || defined(__TOS_WIN__) || defined(__WINDOWS__)
-#define cplatform cplatform_windows
-#elif defined(__linux__) || defined(__linux) || defined(linux) || defined(__gnu_linux__)
-#define cplatform cplatform_linux
-#elif defined(__APPLE__) || defined(__MACH__)
-#define cplatform cplatform_macos
+#if defined(_WIN32)
+#define CPLATFORM CPLATFORM_WINDOWS
+#elif defined(__APPLE__)
+#define CPLATFORM CPLATFORM_MACOS
+#elif defined(__linux__)
+#define CPLATFORM CPLATFORM_LINUX
 #else
-#define cplatform 0
+#define CPLATFORM CPLATFORM_UNKNOWN
 #warning "Unknown platform"
 #endif
+
 #include <stdio.h>
 #include <string.h>
 #include <time.h>
-#if cplatform == cplatform_linux || cplatform == cplatform_macos
-#include <unistd.h>
-#define ISATTY(fp) isatty(fileno(fp))
-#elif cplatform == cplatform_windows
+
+#if CPLATFORM == CPLATFORM_WINDOWS
 #include <io.h>
-#define ISATTY(fp) _isatty(_fileno(fp))
+#define CLOG_ISATTY(fp) _isatty(_fileno(fp))
+#elif CPLATFORM == CPLATFORM_LINUX || CPLATFORM == CPLATFORM_MACOS
+#include <unistd.h>
+#define CLOG_ISATTY(fp) isatty(fileno(fp))
 #else
-#define ISATTY(fp) 0
+#define CLOG_ISATTY(fp) 0
 #endif
 
-#if defined(CLOG_NCOLOR)
-#undef ISATTY
-#define ISATTY(fp) 0
+#ifdef CLOG_NCOLOR
+#undef CLOG_ISATTY
+#define CLOG_ISATTY(fp) 0
 #endif
 
 typedef enum {
@@ -47,6 +50,7 @@ static const char* __PLAIN_LEVELS[] = {
   "WARN ",
   "ERROR",
 };
+
 static const char* __COLOR_LEVELS[] = {
   "\033[32mDEBUG\033[0m",
   "\033[34mINFO \033[0m",
@@ -79,7 +83,9 @@ static const char* __COLOR_LEVELS[] = {
 #define __headerColor(file, line) ""
 #endif
 
-static clog_level_t __clog_default_level = CLOG_LEVEL_DEBUG;
+extern clog_level_t __clog_default_level;
+
+#define CLOG_INIT() clog_level_t __clog_default_level = CLOG_LEVEL_DEBUG
 
 static inline void
 clog_set_level(clog_level_t level)
@@ -142,7 +148,7 @@ __pglog_print(int level, FILE* stream, const char* header)
 #define __log2terminal(level, ...)                                                                                     \
   do {                                                                                                                 \
     FILE* __tfp = level == CLOG_LEVEL_ERROR ? stderr : stdout;                                                         \
-    if (!ISATTY(__tfp)) {                                                                                              \
+    if (!CLOG_ISATTY(__tfp)) {                                                                                         \
       __log2file(level, __tfp, __VA_ARGS__);                                                                           \
     } else {                                                                                                           \
       FILE* __fp = __pglog_print(level, __tfp, __headerColor(__FILE__, CLOG_StR(__LINE__)));                           \

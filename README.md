@@ -20,6 +20,8 @@ Log messages to the terminal with different log levels. This example shows how t
 ```c
 #include "clog.h"
 
+CLOG_INIT();
+
 int main() {
     clog_debug("This is a debug message\n");
     clog_info("This is an info message\n");
@@ -35,6 +37,8 @@ Log messages to a file instead of the terminal. This example demonstrates loggin
 
 ```c
 #include "clog.h"
+
+CLOG_INIT();
 
 int main() {
     FILE* fp = fopen("example.log", "w");
@@ -53,6 +57,8 @@ Temporarily change the log level for a block of code. This example shows how to 
 
 ```c
 #include "clog.h"
+
+CLOG_INIT();
 
 int main() {
     clog_guard(CLOG_LEVEL_WARN, {
@@ -101,6 +107,8 @@ The following example demonstrates how to use CLog to log messages to the termin
 
 ```c
 #include "clog.h"
+
+CLOG_INIT();
 
 int
 main()

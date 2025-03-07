@@ -1,5 +1,7 @@
 #include "clog.h"
 
+CLOG_INIT();
+
 int
 main()
 {
@@ -21,6 +23,5 @@ main()
     clog_warn("[GUARD]: This is a warning message\n");
     clog_error("[GUARD]: This is an error message\n");
   });
-
   return 0;
 }
